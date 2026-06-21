@@ -1,0 +1,97 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# SQLite Database local test files
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Credentials & Environment Secrets
+*.keystore
+*.jks
+*.p12
+*.gp
+*.pem
+local.properties
+.env
+.env.*
+secrets.yaml
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+out/
+
+# Visual Studio Code related
+.vscode/
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio / Gradle related
+.gradle/
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# iOS related
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/App.framework
+**/ios/Flutter/ephemeral/
+**/ios/xcuserdata/
+**/ios/DerivedData/
+
+# Windows related
+**/windows/flutter/ephemeral/
+/windows/out/
+/windows/build/
+
+# macOS related
+**/macos/Flutter/ephemeral/
+/macos/out/
+/macos/build/
+
+# Linux related
+**/linux/flutter/ephemeral/
+/linux/out/
+/linux/build/
+
+# Web related
+.gcloud/
+node_modules/

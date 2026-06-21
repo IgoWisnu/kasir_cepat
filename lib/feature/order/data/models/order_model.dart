@@ -1,0 +1,207 @@
+import '../../domain/entities/order.dart';
+import '../../domain/entities/order_item.dart';
+import 'order_item_model.dart';
+
+class OrderModel extends Order {
+  const OrderModel({
+    super.id,
+    super.invoiceNumber,
+    required super.orderQueue,
+    super.customerName,
+    required super.orderType,
+    required super.orderStatus,
+    required super.paymentStatus,
+    required super.subtotal,
+    super.discountId,
+    super.discountValue,
+    super.discountType,
+    super.taxRate,
+    super.taxAmount,
+    required super.grandTotal,
+    super.paymentOptionId,
+    super.cashReceived,
+    super.changeGiven,
+    super.paidAmount,
+    super.notes,
+    super.userId,
+    super.shiftId,
+    required super.createdAt,
+    required super.updatedAt,
+    super.items = const [],
+  });
+
+  factory OrderModel.fromMap(Map<String, dynamic> map, {List<OrderItemModel> items = const []}) {
+    return OrderModel(
+      id: map['id'] as int?,
+      invoiceNumber: map['invoice_number'] as String?,
+      orderQueue: map['order_queue'] as int,
+      customerName: map['customer_name'] as String?,
+      orderType: OrderType.fromString(map['order_type'] as String),
+      orderStatus: OrderStatus.fromString(map['order_status'] as String),
+      paymentStatus: PaymentStatus.fromString(map['payment_status'] as String),
+      subtotal: (map['subtotal'] as num).toDouble(),
+      discountId: map['discount_id'] as int?,
+      discountValue: (map['discount_value'] as num? ?? 0.0).toDouble(),
+      discountType: map['discount_type'] as String?,
+      taxRate: (map['tax_rate'] as num? ?? 0.0).toDouble(),
+      taxAmount: (map['tax_amount'] as num? ?? 0.0).toDouble(),
+      grandTotal: (map['grand_total'] as num).toDouble(),
+      paymentOptionId: map['payment_option_id'] as int?,
+      cashReceived: map['cash_received'] != null ? (map['cash_received'] as num).toDouble() : null,
+      changeGiven: map['change_given'] != null ? (map['change_given'] as num).toDouble() : null,
+      paidAmount: (map['paid_amount'] as num? ?? 0.0).toDouble(),
+      notes: map['notes'] as String?,
+      userId: map['user_id'] as int?,
+      shiftId: map['shift_id'] as int?,
+      createdAt: DateTime.parse(map['created_at'] as String),
+      updatedAt: DateTime.parse(map['updated_at'] as String),
+      items: items,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      if (id != null) 'id': id,
+      'invoice_number': invoiceNumber,
+      'order_queue': orderQueue,
+      'customer_name': customerName,
+      'order_type': orderType.toDbString,
+      'order_status': orderStatus.toDbString,
+      'payment_status': paymentStatus.toDbString,
+      'subtotal': subtotal,
+      'discount_id': discountId,
+      'discount_value': discountValue,
+      'discount_type': discountType,
+      'tax_rate': taxRate,
+      'tax_amount': taxAmount,
+      'grand_total': grandTotal,
+      'payment_option_id': paymentOptionId,
+      'cash_received': cashReceived,
+      'change_given': changeGiven,
+      'paid_amount': paidAmount,
+      'notes': notes,
+      'user_id': userId,
+      'shift_id': shiftId,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
+    };
+  }
+
+  factory OrderModel.fromEntity(Order entity) {
+    return OrderModel(
+      id: entity.id,
+      invoiceNumber: entity.invoiceNumber,
+      orderQueue: entity.orderQueue,
+      customerName: entity.customerName,
+      orderType: entity.orderType,
+      orderStatus: entity.orderStatus,
+      paymentStatus: entity.paymentStatus,
+      subtotal: entity.subtotal,
+      discountId: entity.discountId,
+      discountValue: entity.discountValue,
+      discountType: entity.discountType,
+      taxRate: entity.taxRate,
+      taxAmount: entity.taxAmount,
+      grandTotal: entity.grandTotal,
+      paymentOptionId: entity.paymentOptionId,
+      cashReceived: entity.cashReceived,
+      changeGiven: entity.changeGiven,
+      paidAmount: entity.paidAmount,
+      notes: entity.notes,
+      userId: entity.userId,
+      shiftId: entity.shiftId,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      items: entity.items,
+    );
+  }
+
+  Order toEntity() {
+    return Order(
+      id: id,
+      invoiceNumber: invoiceNumber,
+      orderQueue: orderQueue,
+      customerName: customerName,
+      orderType: orderType,
+      orderStatus: orderStatus,
+      paymentStatus: paymentStatus,
+      subtotal: subtotal,
+      discountId: discountId,
+      discountValue: discountValue,
+      discountType: discountType,
+      taxRate: taxRate,
+      taxAmount: taxAmount,
+      grandTotal: grandTotal,
+      paymentOptionId: paymentOptionId,
+      cashReceived: cashReceived,
+      changeGiven: changeGiven,
+      paidAmount: paidAmount,
+      notes: notes,
+      userId: userId,
+      shiftId: shiftId,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+      items: items.map((item) {
+        if (item is OrderItemModel) {
+          return item.toEntity();
+        }
+        return item;
+      }).toList(),
+    );
+  }
+
+  @override
+  OrderModel copyWith({
+    int? id,
+    String? invoiceNumber,
+    int? orderQueue,
+    String? customerName,
+    OrderType? orderType,
+    OrderStatus? orderStatus,
+    PaymentStatus? paymentStatus,
+    double? subtotal,
+    int? discountId,
+    double? discountValue,
+    String? discountType,
+    double? taxRate,
+    double? taxAmount,
+    double? grandTotal,
+    int? paymentOptionId,
+    double? cashReceived,
+    double? changeGiven,
+    double? paidAmount,
+    String? notes,
+    int? userId,
+    int? shiftId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<OrderItem>? items,
+  }) {
+    return OrderModel(
+      id: id ?? this.id,
+      invoiceNumber: invoiceNumber ?? this.invoiceNumber,
+      orderQueue: orderQueue ?? this.orderQueue,
+      customerName: customerName ?? this.customerName,
+      orderType: orderType ?? this.orderType,
+      orderStatus: orderStatus ?? this.orderStatus,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
+      subtotal: subtotal ?? this.subtotal,
+      discountId: discountId ?? this.discountId,
+      discountValue: discountValue ?? this.discountValue,
+      discountType: discountType ?? this.discountType,
+      taxRate: taxRate ?? this.taxRate,
+      taxAmount: taxAmount ?? this.taxAmount,
+      grandTotal: grandTotal ?? this.grandTotal,
+      paymentOptionId: paymentOptionId ?? this.paymentOptionId,
+      cashReceived: cashReceived ?? this.cashReceived,
+      changeGiven: changeGiven ?? this.changeGiven,
+      paidAmount: paidAmount ?? this.paidAmount,
+      notes: notes ?? this.notes,
+      userId: userId ?? this.userId,
+      shiftId: shiftId ?? this.shiftId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      items: items ?? this.items,
+    );
+  }
+}
