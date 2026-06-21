@@ -41,7 +41,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
       final todayData = await db.rawQuery(
         "SELECT COUNT(*) as count, SUM(grand_total) as total FROM orders WHERE order_status = 'completed' AND created_at LIKE ?",
-        ['$todayStr%']
+        ['$todayStr%'],
       );
       final todayTrx = Sqflite.firstIntValue(todayData) ?? 0;
       final todaySls = (todayData.first['total'] as num?)?.toDouble() ?? 0.0;
@@ -80,7 +80,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 16.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -104,9 +107,9 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 Text(
                   'Menu Utama',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
 
@@ -121,10 +124,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     );
   }
 
-  Widget _buildBusinessAvatar(AsyncValue<Business?> businessState, {double size = 42, double iconSize = 20}) {
+  Widget _buildBusinessAvatar(
+    AsyncValue<Business?> businessState, {
+    double size = 42,
+    double iconSize = 20,
+  }) {
     return businessState.maybeWhen(
       data: (business) {
-        if (business == null || business.logo == null || business.logo!.isEmpty) {
+        if (business == null ||
+            business.logo == null ||
+            business.logo!.isEmpty) {
           return Container(
             width: size,
             height: size,
@@ -133,7 +142,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               color: AppColors.primaryLight,
               shape: BoxShape.circle,
             ),
-            child: Icon(LucideIcons.store, color: AppColors.primary, size: iconSize),
+            child: Icon(
+              LucideIcons.store,
+              color: AppColors.primary,
+              size: iconSize,
+            ),
           );
         }
 
@@ -148,23 +161,36 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             if (colorVal != null) color = Color(colorVal);
 
             switch (iconName) {
-              case 'store': icon = LucideIcons.store; break;
-              case 'coffee': icon = LucideIcons.coffee; break;
-              case 'utensils': icon = LucideIcons.utensils; break;
-              case 'shopping-bag': icon = LucideIcons.shoppingBag; break;
-              case 'shirt': icon = LucideIcons.shirt; break;
-              case 'scissors': icon = LucideIcons.scissors; break;
-              case 'wrench': icon = LucideIcons.wrench; break;
-              case 'package': icon = LucideIcons.package; break;
+              case 'store':
+                icon = LucideIcons.store;
+                break;
+              case 'coffee':
+                icon = LucideIcons.coffee;
+                break;
+              case 'utensils':
+                icon = LucideIcons.utensils;
+                break;
+              case 'shopping-bag':
+                icon = LucideIcons.shoppingBag;
+                break;
+              case 'shirt':
+                icon = LucideIcons.shirt;
+                break;
+              case 'scissors':
+                icon = LucideIcons.scissors;
+                break;
+              case 'wrench':
+                icon = LucideIcons.wrench;
+                break;
+              case 'package':
+                icon = LucideIcons.package;
+                break;
             }
           }
           return Container(
             width: size,
             height: size,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             alignment: Alignment.center,
             child: Icon(icon, color: Colors.white, size: iconSize),
           );
@@ -192,7 +218,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
             color: AppColors.primaryLight,
             shape: BoxShape.circle,
           ),
-          child: Icon(LucideIcons.store, color: AppColors.primary, size: iconSize),
+          child: Icon(
+            LucideIcons.store,
+            color: AppColors.primary,
+            size: iconSize,
+          ),
         );
       },
       orElse: () => Container(
@@ -203,7 +233,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           color: AppColors.primaryLight,
           shape: BoxShape.circle,
         ),
-        child: Icon(LucideIcons.store, color: AppColors.primary, size: iconSize),
+        child: Icon(
+          LucideIcons.store,
+          color: AppColors.primary,
+          size: iconSize,
+        ),
       ),
     );
   }
@@ -217,10 +251,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
       children: [
         const Text(
           'Selamat Bertugas,',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-          ),
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
         ),
         const SizedBox(height: 4),
         Text(
@@ -256,7 +287,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   color: AppColors.shadow,
                   blurRadius: 10,
                   offset: Offset(0, 4),
-                )
+                ),
               ],
             ),
             child: Padding(
@@ -267,9 +298,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     padding: const EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.primaryLight, width: 2),
+                      border: Border.all(
+                        color: AppColors.primaryLight,
+                        width: 2,
+                      ),
                     ),
-                    child: _buildBusinessAvatar(businessState, size: 54, iconSize: 26),
+                    child: _buildBusinessAvatar(
+                      businessState,
+                      size: 54,
+                      iconSize: 26,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -288,7 +326,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         if (address != null && address.isNotEmpty) ...[
                           Row(
                             children: [
-                              const Icon(LucideIcons.mapPin, size: 12, color: AppColors.textSecondary),
+                              const Icon(
+                                LucideIcons.mapPin,
+                                size: 12,
+                                color: AppColors.textSecondary,
+                              ),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
@@ -308,7 +350,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                         if (phone != null && phone.isNotEmpty) ...[
                           Row(
                             children: [
-                              const Icon(LucideIcons.phone, size: 12, color: AppColors.textSecondary),
+                              const Icon(
+                                LucideIcons.phone,
+                                size: 12,
+                                color: AppColors.textSecondary,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 phone,
@@ -332,7 +378,11 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       ],
                     ),
                   ),
-                  const Icon(LucideIcons.chevronRight, size: 18, color: AppColors.textLight),
+                  const Icon(
+                    LucideIcons.chevronRight,
+                    size: 18,
+                    color: AppColors.textLight,
+                  ),
                 ],
               ),
             ),
@@ -358,7 +408,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   color: AppColors.shadow,
                   blurRadius: 10,
                   offset: Offset(0, 4),
-                )
+                ),
               ],
             ),
             child: Row(
@@ -416,7 +466,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   color: AppColors.shadow,
                   blurRadius: 10,
                   offset: Offset(0, 4),
-                )
+                ),
               ],
             ),
             child: Row(
@@ -536,15 +586,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                   },
                   child: ElevatedButton.icon(
                     onPressed: null,
-                    icon: const Icon(LucideIcons.play, size: 16, color: Colors.white),
+                    icon: const Icon(
+                      LucideIcons.play,
+                      size: 16,
+                      color: Colors.white,
+                    ),
                     label: const Text(
                       'Mulai Shift Baru',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       disabledBackgroundColor: AppColors.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       minimumSize: const Size(double.infinity, 40),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -593,7 +653,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     ],
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.green[100],
                       borderRadius: BorderRadius.circular(12),
@@ -618,7 +681,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     children: [
                       const Text(
                         'Modal Awal',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -636,7 +702,10 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     children: [
                       const Text(
                         'Kasir',
-                        style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
                       const SizedBox(height: 2),
                       Text(
@@ -658,15 +727,25 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                 },
                 child: ElevatedButton.icon(
                   onPressed: null,
-                  icon: const Icon(LucideIcons.stopCircle, size: 16, color: Colors.white),
+                  icon: const Icon(
+                    LucideIcons.stopCircle,
+                    size: 16,
+                    color: Colors.white,
+                  ),
                   label: const Text(
                     'Akhiri Shift',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     disabledBackgroundColor: Colors.red,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     minimumSize: const Size(double.infinity, 40),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -682,18 +761,22 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   }
 
   String _formatCurrency(double val) {
-    return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(val);
+    return NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(val);
   }
 
   Widget _buildMenuGrid(BuildContext context) {
-    // 2-column Grid tailored for portrait mode
+    // 3-column app-icon style grid with text labels below the cards
     return GridView.count(
-      crossAxisCount: 2,
+      crossAxisCount: 3,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 14,
-      mainAxisSpacing: 14,
-      childAspectRatio: 1.15,
+      crossAxisSpacing: 10,
+      mainAxisSpacing: 10,
+      childAspectRatio: 0.88,
       children: [
         _buildMenuItem(
           context,
@@ -768,6 +851,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         ),
         _buildMenuItem(
           context,
+          title: 'Laporan Bisnis',
+          icon: LucideIcons.barChart2,
+          color: Colors.purple[700]!,
+          route: '/reports',
+        ),
+        _buildMenuItem(
+          context,
           title: 'Pengaturan & Printer',
           icon: LucideIcons.settings,
           color: Colors.blue,
@@ -805,76 +895,69 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           context.push(route);
         }
       },
-      child: Card(
-        margin: EdgeInsets.zero,
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.shadow,
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              )
-            ],
-          ),
-          child: Stack(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
+              Container(
+                width: 58,
+                height: 58,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
                     ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 22,
-                    ),
-                  ),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, color: Colors.white, size: 26),
               ),
               if (badgeText != null)
                 Positioned(
-                  top: 0,
-                  right: 0,
+                  top: -4,
+                  right: -8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.accent,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.white, width: 1.5),
                     ),
                     child: Text(
                       badgeText,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 9,
+                        fontSize: 8,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                )
+                ),
             ],
           ),
-        ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: AppColors.textPrimary,
+              height: 1.2,
+            ),
+          ),
+        ],
       ),
     );
   }

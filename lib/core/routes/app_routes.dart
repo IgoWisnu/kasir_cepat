@@ -20,6 +20,10 @@ import '../../feature/pos/presentation/payment_page.dart';
 import '../../feature/printer/presentation/printer_list_page.dart';
 import '../../feature/order/presentation/order_history_page.dart';
 import '../../feature/shift/presentation/shift_history_page.dart';
+import '../../feature/report/presentation/report_dashboard_page.dart';
+import '../../feature/report/presentation/sales_report_page.dart';
+import '../../feature/report/presentation/shift_report_page.dart';
+import '../../feature/report/presentation/stock_movement_report_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -111,6 +115,22 @@ class AppRouter {
       GoRoute(
         path: '/shifts',
         builder: (context, state) => const ShiftHistoryPage(),
+      ),
+      GoRoute(
+        path: '/reports',
+        builder: (context, state) => const ReportDashboardPage(),
+      ),
+      GoRoute(
+        path: '/reports/sales',
+        builder: (context, state) => const SalesReportPage(),
+      ),
+      GoRoute(
+        path: '/reports/shifts',
+        builder: (context, state) => const ShiftReportPage(),
+      ),
+      GoRoute(
+        path: '/reports/stock-movements',
+        builder: (context, state) => const StockMovementReportPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
