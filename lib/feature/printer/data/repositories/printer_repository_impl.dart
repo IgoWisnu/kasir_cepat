@@ -2,9 +2,11 @@ import 'package:dartz/dartz.dart' hide Order;
 import '../../../../core/errors/failures.dart';
 import '../../../order/domain/entities/order.dart';
 import '../../domain/entities/printer.dart';
+import '../../domain/entities/receipt_template.dart';
 import '../../domain/repositories/printer_repository.dart';
 import '../datasources/printer_local_datasource.dart';
 import '../models/printer_model.dart';
+import '../models/receipt_template_model.dart';
 
 class PrinterRepositoryImpl implements PrinterRepository {
   final PrinterLocalDataSource localDataSource;
@@ -66,33 +68,86 @@ class PrinterRepositoryImpl implements PrinterRepository {
   @override
   Future<Either<Failure, void>> printReceipt(Order order, PrinterDevice printer) async {
     try {
+      final template = await localDataSource.getReceiptTemplate();
+      final business = await localDataSource.getBusinessProfile();
+
       // Formats the receipt into a text string and prints it to the console log
       final buffer = StringBuffer();
       final width = printer.paperSize == 80 ? 40 : 32;
 
       buffer.writeln('\n');
       buffer.writeln('=' * width);
-      buffer.writeln(_centerText('KASIR CEPAT', width));
-      buffer.writeln(_centerText('Kuitansi Pembayaran POS', width));
+
+      // 1. Business Logo
+      if (template.showLogo) {
+        final logo = business?['logo'] as String?;
+        if (logo != null && logo.isNotEmpty) {
+          buffer.writeln(_centerText('[LOGO: $logo]', width));
+        } else {
+          buffer.writeln(_centerText('[LOGO]', width));
+        }
+      }
+
+      // 2. Business Name
+      if (template.showBusinessName) {
+        final name = (template.businessNameOverride != null && template.businessNameOverride!.trim().isNotEmpty)
+            ? template.businessNameOverride!.trim()
+            : (business?['name'] as String? ?? 'KASIR CEPAT');
+        buffer.writeln(_centerText(name, width));
+      }
+
+      // 3. Business Address
+      if (template.showBusinessAddress) {
+        final address = (template.businessAddressOverride != null && template.businessAddressOverride!.trim().isNotEmpty)
+            ? template.businessAddressOverride!.trim()
+            : (business?['address'] as String?);
+        if (address != null && address.trim().isNotEmpty) {
+          buffer.writeln(_centerText(address, width));
+        }
+      }
+
       buffer.writeln('=' * width);
       
+      // 4. Transaction Info
       buffer.writeln('Nomor Antrean : #${order.orderQueue}');
-      buffer.writeln('No. Invoice   : ${order.invoiceNumber ?? "-"}');
+      if (template.showTransactionId) {
+        buffer.writeln('No. Invoice   : ${order.invoiceNumber ?? "-"}');
+      }
       buffer.writeln('Waktu         : ${order.createdAt}');
       buffer.writeln('Tipe Pesanan  : ${order.orderType.name.toUpperCase()}');
-      if (order.customerName != null) {
+      
+      if (template.showCustomerName && order.customerName != null) {
         buffer.writeln('Pelanggan     : ${order.customerName}');
       }
+
+      if (template.showCashierName && order.userId != null) {
+        final cashierName = await localDataSource.getCashierName(order.userId!);
+        if (cashierName != null) {
+          buffer.writeln('Kasir         : $cashierName');
+        }
+      }
+
       buffer.writeln('-' * width);
 
+      // 5. Items List
       for (final item in order.items) {
         buffer.writeln(item.productName);
+
+        // Show product SKU if config enabled
+        if (template.showProductSku && item.productId != null) {
+          final sku = await localDataSource.getProductSku(item.productId!);
+          if (sku != null && sku.trim().isNotEmpty) {
+            buffer.writeln('  SKU: $sku');
+          }
+        }
+
         final qtyPrice = '  ${item.qty.toStringAsFixed(0)} x ${_formatCurrency(item.priceAtPurchase)}';
         final sub = _formatCurrency(item.subtotal);
         buffer.writeln(_rowText(qtyPrice, sub, width));
       }
       buffer.writeln('-' * width);
 
+      // 6. Summary Totals
       buffer.writeln(_rowText('Subtotal', _formatCurrency(order.subtotal), width));
       if (order.discountValue > 0) {
         buffer.writeln(_rowText('Diskon', '-${_formatCurrency(order.discountValue)}', width));
@@ -105,8 +160,18 @@ class PrinterRepositoryImpl implements PrinterRepository {
       }
       
       buffer.writeln('=' * width);
-      buffer.writeln(_centerText('Terima Kasih Atas Kunjungan Anda', width));
-      buffer.writeln(_centerText('Simpan Bukti Pembayaran Ini', width));
+
+      // 7. Footer text
+      final footer = (template.footerText != null && template.footerText!.trim().isNotEmpty)
+          ? template.footerText!.trim()
+          : (business?['footer_message'] as String? ?? 'Terima Kasih Atas Kunjungan Anda\nSimpan Bukti Pembayaran Ini');
+      
+      for (final line in footer.split('\n')) {
+        if (line.trim().isNotEmpty) {
+          buffer.writeln(_centerText(line.trim(), width));
+        }
+      }
+
       buffer.writeln('=' * width);
       buffer.writeln('\n');
 
@@ -163,6 +228,27 @@ class PrinterRepositoryImpl implements PrinterRepository {
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure('Gagal melakukan cetak uji coba: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ReceiptTemplate>> getReceiptTemplate() async {
+    try {
+      final model = await localDataSource.getReceiptTemplate();
+      return Right(model.toEntity());
+    } catch (e) {
+      return Left(CacheFailure('Gagal mengambil pengaturan struk: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveReceiptTemplate(ReceiptTemplate template) async {
+    try {
+      final model = ReceiptTemplateModel.fromEntity(template);
+      await localDataSource.saveReceiptTemplate(model);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Gagal menyimpan pengaturan struk: $e'));
     }
   }
 

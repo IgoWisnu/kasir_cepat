@@ -3,6 +3,7 @@ import '../../../../core/database/database_helper.dart';
 import '../../domain/entities/sales_report.dart';
 import '../../domain/entities/shift_report.dart';
 import '../../domain/entities/stock_movement_report.dart';
+import '../../domain/entities/product_selling_report.dart';
 
 abstract class ReportLocalDataSource {
   Future<SalesReport> getSalesReport({
@@ -15,6 +16,11 @@ abstract class ReportLocalDataSource {
   });
 
   Future<List<StockMovementItem>> getStockMovementReport({
+    required DateTime startDate,
+    required DateTime endDate,
+  });
+
+  Future<ProductSellingReport> getProductSellingReport({
     required DateTime startDate,
     required DateTime endDate,
   });
@@ -251,5 +257,46 @@ class ReportLocalDataSourceImpl implements ReportLocalDataSource {
         createdAt: DateTime.parse(row['created_at'] as String),
       );
     }).toList();
+  }
+
+  @override
+  Future<ProductSellingReport> getProductSellingReport({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    final db = await databaseHelper.database;
+    final startStr = _formatDateStart(startDate);
+    final endStr = _formatDateEnd(endDate);
+
+    final results = await db.rawQuery('''
+      SELECT 
+        p.id as product_id,
+        p.name as product_name,
+        p.sku as product_sku,
+        COALESCE(SUM(CASE WHEN o.order_status = 'completed' AND o.created_at >= ? AND o.created_at <= ? THEN oi.qty ELSE 0 END), 0) as quantity_sold,
+        COALESCE(SUM(CASE WHEN o.order_status = 'completed' AND o.created_at >= ? AND o.created_at <= ? THEN oi.subtotal ELSE 0 END), 0) as total_sales
+      FROM products p
+      LEFT JOIN order_items oi ON p.id = oi.product_id
+      LEFT JOIN orders o ON oi.order_id = o.id
+      WHERE p.is_active = 1
+      GROUP BY p.id, p.name, p.sku
+      ORDER BY quantity_sold DESC, total_sales DESC
+    ''', [startStr, endStr, startStr, endStr]);
+
+    final items = results.map((row) {
+      return ProductSellingItem(
+        productId: row['product_id'] as int,
+        productName: row['product_name'] as String,
+        productSku: row['product_sku'] as String?,
+        quantitySold: (row['quantity_sold'] as num).toDouble(),
+        totalSales: (row['total_sales'] as num).toDouble(),
+      );
+    }).toList();
+
+    return ProductSellingReport(
+      startDate: startDate,
+      endDate: endDate,
+      items: items,
+    );
   }
 }

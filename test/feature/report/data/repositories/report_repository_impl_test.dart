@@ -6,6 +6,7 @@ import 'package:kasir_cepat/feature/report/data/repositories/report_repository_i
 import 'package:kasir_cepat/feature/report/domain/entities/sales_report.dart';
 import 'package:kasir_cepat/feature/report/domain/entities/shift_report.dart';
 import 'package:kasir_cepat/feature/report/domain/entities/stock_movement_report.dart';
+import 'package:kasir_cepat/feature/report/domain/entities/product_selling_report.dart';
 
 class FakeReportLocalDataSource implements ReportLocalDataSource {
   SalesReport? mockSalesReport;
@@ -37,6 +38,17 @@ class FakeReportLocalDataSource implements ReportLocalDataSource {
   }) async {
     if (shouldThrow) throw Exception('DB Error');
     return mockMovements;
+  }
+
+  ProductSellingReport? mockProductSellingReport;
+
+  @override
+  Future<ProductSellingReport> getProductSellingReport({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    if (shouldThrow) throw Exception('DB Error');
+    return mockProductSellingReport!;
   }
 }
 
@@ -142,6 +154,40 @@ void main() {
       final result = await repository.getStockMovementReport(startDate: tStartDate, endDate: tEndDate);
       // Assert
       expect(result, isA<Left<Failure, List<StockMovementItem>>>());
+    });
+  });
+
+  group('getProductSellingReport', () {
+    final tProductSellingReport = ProductSellingReport(
+      startDate: tStartDate,
+      endDate: tEndDate,
+      items: const [
+        ProductSellingItem(
+          productId: 1,
+          productName: 'Kopi Toraja',
+          productSku: 'KOPI-01',
+          quantitySold: 15.0,
+          totalSales: 150000.0,
+        ),
+      ],
+    );
+
+    test('should return ProductSellingReport on success', () async {
+      // Arrange
+      localDataSource.mockProductSellingReport = tProductSellingReport;
+      // Act
+      final result = await repository.getProductSellingReport(startDate: tStartDate, endDate: tEndDate);
+      // Assert
+      expect(result, Right(tProductSellingReport));
+    });
+
+    test('should return CacheFailure on exception', () async {
+      // Arrange
+      localDataSource.shouldThrow = true;
+      // Act
+      final result = await repository.getProductSellingReport(startDate: tStartDate, endDate: tEndDate);
+      // Assert
+      expect(result, isA<Left<Failure, ProductSellingReport>>());
     });
   });
 }

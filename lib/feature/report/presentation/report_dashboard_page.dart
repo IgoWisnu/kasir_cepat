@@ -145,6 +145,14 @@ class ReportDashboardPage extends ConsumerWidget {
               ),
               _buildNavigationMenuCard(
                 context,
+                title: 'Laporan Penjualan Produk',
+                description: 'Daftar produk terlaris, produk tidak terjual (unsold), dan rincian kuantitas serta omset per produk.',
+                icon: LucideIcons.packageCheck,
+                color: Colors.indigo[600]!,
+                route: '/reports/product-selling',
+              ),
+              _buildNavigationMenuCard(
+                context,
                 title: 'Laporan Per Shift',
                 description: 'Detail performa cashier shift, modal laci uang, pencatatan kas riil, dan selisih kas.',
                 icon: LucideIcons.users2,

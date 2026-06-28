@@ -61,6 +61,7 @@ void main() {
 
     // Assert Navigation cards
     expect(find.text('Laporan Penjualan Detail'), findsOneWidget);
+    expect(find.text('Laporan Penjualan Produk'), findsOneWidget);
     expect(find.text('Laporan Per Shift'), findsOneWidget);
     expect(find.text('Laporan Mutasi Stok'), findsOneWidget);
 

@@ -18,12 +18,14 @@ import '../../feature/payment/presentation/payment_option_list_page.dart';
 import '../../feature/pos/presentation/pos_page.dart';
 import '../../feature/pos/presentation/payment_page.dart';
 import '../../feature/printer/presentation/printer_list_page.dart';
+import '../../feature/printer/presentation/receipt_template_page.dart';
 import '../../feature/order/presentation/order_history_page.dart';
 import '../../feature/shift/presentation/shift_history_page.dart';
 import '../../feature/report/presentation/report_dashboard_page.dart';
 import '../../feature/report/presentation/sales_report_page.dart';
 import '../../feature/report/presentation/shift_report_page.dart';
 import '../../feature/report/presentation/stock_movement_report_page.dart';
+import '../../feature/report/presentation/product_selling_report_page.dart';
 
 class AppRouter {
   AppRouter._();
@@ -109,6 +111,10 @@ class AppRouter {
         builder: (context, state) => const PrinterListPage(),
       ),
       GoRoute(
+        path: '/settings/receipt-template',
+        builder: (context, state) => const ReceiptTemplatePage(),
+      ),
+      GoRoute(
         path: '/payment-options',
         builder: (context, state) => const PaymentOptionListPage(),
       ),
@@ -131,6 +137,10 @@ class AppRouter {
       GoRoute(
         path: '/reports/stock-movements',
         builder: (context, state) => const StockMovementReportPage(),
+      ),
+      GoRoute(
+        path: '/reports/product-selling',
+        builder: (context, state) => const ProductSellingReportPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

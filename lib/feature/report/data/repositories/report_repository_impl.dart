@@ -3,6 +3,7 @@ import '../../../../core/errors/failures.dart';
 import '../../domain/entities/sales_report.dart';
 import '../../domain/entities/shift_report.dart';
 import '../../domain/entities/stock_movement_report.dart';
+import '../../domain/entities/product_selling_report.dart';
 import '../../domain/repositories/report_repository.dart';
 import '../datasources/report_local_datasource.dart';
 
@@ -52,6 +53,22 @@ class ReportRepositoryImpl implements ReportRepository {
       return Right(movements);
     } catch (e) {
       return Left(CacheFailure('Gagal memuat laporan mutasi stok: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ProductSellingReport>> getProductSellingReport({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final report = await localDataSource.getProductSellingReport(
+        startDate: startDate,
+        endDate: endDate,
+      );
+      return Right(report);
+    } catch (e) {
+      return Left(CacheFailure('Gagal memuat laporan penjualan produk: $e'));
     }
   }
 }

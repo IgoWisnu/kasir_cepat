@@ -114,10 +114,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   children: [
                     const SizedBox(height: 24),
                     // Heading
-                    const Icon(
-                      LucideIcons.lock,
-                      size: 40,
-                      color: AppColors.primary,
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/logo/logo.png',
+                        width: 60,
+                        height: 60,
+                        fit: BoxFit.cover,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Text(

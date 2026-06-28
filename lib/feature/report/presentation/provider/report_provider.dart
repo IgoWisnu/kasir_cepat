@@ -9,10 +9,12 @@ import '../../data/repositories/report_repository_impl.dart';
 import '../../domain/entities/sales_report.dart';
 import '../../domain/entities/shift_report.dart';
 import '../../domain/entities/stock_movement_report.dart';
+import '../../domain/entities/product_selling_report.dart';
 import '../../domain/repositories/report_repository.dart';
 import '../../domain/usecases/get_sales_report.dart';
 import '../../domain/usecases/get_shift_report.dart';
 import '../../domain/usecases/get_stock_movement_report.dart';
+import '../../domain/usecases/get_product_selling_report.dart';
 
 // Providers for repository and data sources
 final reportLocalDataSourceProvider = Provider<ReportLocalDataSource>((ref) {
@@ -34,6 +36,10 @@ final getShiftReportUseCaseProvider = Provider<GetShiftReport>((ref) {
 
 final getStockMovementReportUseCaseProvider = Provider<GetStockMovementReport>((ref) {
   return GetStockMovementReport(ref.read(reportRepositoryProvider));
+});
+
+final getProductSellingReportUseCaseProvider = Provider<GetProductSellingReport>((ref) {
+  return GetProductSellingReport(ref.read(reportRepositoryProvider));
 });
 
 // UI State and Data Providers
@@ -118,6 +124,30 @@ final reportShiftsListProvider = FutureProvider.autoDispose<List<Shift>>((ref) a
 final shiftReportProvider = FutureProvider.autoDispose.family<ShiftReport, int>((ref, shiftId) async {
   final getShiftReport = ref.read(getShiftReportUseCaseProvider);
   final result = await getShiftReport(shiftId);
+  return result.fold(
+    (failure) => throw failure.message,
+    (report) => report,
+  );
+});
+
+// 4. Product Selling Report
+final productSellingDateRangeProvider = StateProvider<DateTimeRange>((ref) {
+  final now = DateTime.now();
+  return DateTimeRange(
+    start: DateTime(now.year, now.month, now.day),
+    end: DateTime(now.year, now.month, now.day, 23, 59, 59, 999),
+  );
+});
+
+final productSellingReportProvider = FutureProvider.autoDispose<ProductSellingReport>((ref) async {
+  final range = ref.watch(productSellingDateRangeProvider);
+  final getProductSellingReport = ref.read(getProductSellingReportUseCaseProvider);
+  
+  final result = await getProductSellingReport(GetProductSellingReportParams(
+    startDate: range.start,
+    endDate: range.end,
+  ));
+  
   return result.fold(
     (failure) => throw failure.message,
     (report) => report,

@@ -4,6 +4,7 @@ import '../../../../core/usecase/usecase.dart';
 import '../../data/datasources/printer_local_datasource.dart';
 import '../../data/repositories/printer_repository_impl.dart';
 import '../../domain/entities/printer.dart';
+import '../../domain/entities/receipt_template.dart';
 import '../../domain/repositories/printer_repository.dart';
 import '../../domain/usecases/delete_printer.dart';
 import '../../domain/usecases/get_default_printer.dart';
@@ -12,6 +13,8 @@ import '../../domain/usecases/print_receipt.dart';
 import '../../domain/usecases/save_printer.dart';
 import '../../domain/usecases/set_default_printer.dart';
 import '../../domain/usecases/print_test_page.dart';
+import '../../domain/usecases/get_receipt_template.dart';
+import '../../domain/usecases/save_receipt_template.dart';
 
 // 1. Database & Source Providers
 final printerDatabaseHelperProvider = Provider<DatabaseHelper>((ref) => DatabaseHelper.instance);
@@ -52,6 +55,14 @@ final printReceiptUseCaseProvider = Provider<PrintReceipt>((ref) {
 
 final printTestPageUseCaseProvider = Provider<PrintTestPage>((ref) {
   return PrintTestPage(ref.watch(printerRepositoryProvider));
+});
+
+final getReceiptTemplateUseCaseProvider = Provider<GetReceiptTemplate>((ref) {
+  return GetReceiptTemplate(ref.watch(printerRepositoryProvider));
+});
+
+final saveReceiptTemplateUseCaseProvider = Provider<SaveReceiptTemplate>((ref) {
+  return SaveReceiptTemplate(ref.watch(printerRepositoryProvider));
 });
 
 // 4. State Notifier managing the List of Printers
@@ -145,5 +156,45 @@ final defaultPrinterProvider = StateNotifierProvider<DefaultPrinterNotifier, Asy
   return DefaultPrinterNotifier(
     getDefaultPrinter: ref.watch(getDefaultPrinterUseCaseProvider),
     setDefaultPrinter: ref.watch(setDefaultPrinterUseCaseProvider),
+  );
+});
+
+// 6. State Notifier managing Receipt Template Configuration
+class ReceiptTemplateNotifier extends StateNotifier<AsyncValue<ReceiptTemplate>> {
+  final GetReceiptTemplate getReceiptTemplate;
+  final SaveReceiptTemplate saveReceiptTemplate;
+
+  ReceiptTemplateNotifier({
+    required this.getReceiptTemplate,
+    required this.saveReceiptTemplate,
+  }) : super(const AsyncValue.loading()) {
+    loadReceiptTemplate();
+  }
+
+  Future<void> loadReceiptTemplate() async {
+    state = const AsyncValue.loading();
+    final result = await getReceiptTemplate(NoParams());
+    result.fold(
+      (failure) => state = AsyncValue.error(failure.message, StackTrace.current),
+      (template) => state = AsyncValue.data(template),
+    );
+  }
+
+  Future<bool> updateReceiptTemplate(ReceiptTemplate template) async {
+    final result = await saveReceiptTemplate(template);
+    return result.fold(
+      (failure) => false,
+      (_) {
+        state = AsyncValue.data(template);
+        return true;
+      },
+    );
+  }
+}
+
+final receiptTemplateProvider = StateNotifierProvider<ReceiptTemplateNotifier, AsyncValue<ReceiptTemplate>>((ref) {
+  return ReceiptTemplateNotifier(
+    getReceiptTemplate: ref.watch(getReceiptTemplateUseCaseProvider),
+    saveReceiptTemplate: ref.watch(saveReceiptTemplateUseCaseProvider),
   );
 });

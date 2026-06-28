@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:lucide_icons/lucide_icons.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../../../core/database/database_helper.dart';
 import '../../../core/themes/app_colors.dart';
@@ -66,16 +65,13 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               // Logo Container
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  LucideIcons.shoppingCart,
-                  color: AppColors.primary,
-                  size: 64,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.asset(
+                  'assets/logo/logo.png',
+                  width: 120,
+                  height: 120,
+                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(height: 24),

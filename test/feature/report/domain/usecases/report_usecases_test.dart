@@ -8,6 +8,8 @@ import 'package:kasir_cepat/feature/report/domain/repositories/report_repository
 import 'package:kasir_cepat/feature/report/domain/usecases/get_sales_report.dart';
 import 'package:kasir_cepat/feature/report/domain/usecases/get_shift_report.dart';
 import 'package:kasir_cepat/feature/report/domain/usecases/get_stock_movement_report.dart';
+import 'package:kasir_cepat/feature/report/domain/entities/product_selling_report.dart';
+import 'package:kasir_cepat/feature/report/domain/usecases/get_product_selling_report.dart';
 
 class FakeReportRepository implements ReportRepository {
   SalesReport? mockSalesReport;
@@ -58,6 +60,23 @@ class FakeReportRepository implements ReportRepository {
     lastEndDate = endDate;
     return Right(mockMovements);
   }
+
+  ProductSellingReport? mockProductSellingReport;
+  bool getProductSellingReportCalled = false;
+
+  @override
+  Future<Either<Failure, ProductSellingReport>> getProductSellingReport({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    getProductSellingReportCalled = true;
+    lastStartDate = startDate;
+    lastEndDate = endDate;
+    if (mockProductSellingReport == null) {
+      return Left(CacheFailure('Laporan tidak ada'));
+    }
+    return Right(mockProductSellingReport!);
+  }
 }
 
 void main() {
@@ -65,12 +84,14 @@ void main() {
   late GetSalesReport getSalesReportUseCase;
   late GetShiftReport getShiftReportUseCase;
   late GetStockMovementReport getStockMovementReportUseCase;
+  late GetProductSellingReport getProductSellingReportUseCase;
 
   setUp(() {
     repository = FakeReportRepository();
     getSalesReportUseCase = GetSalesReport(repository);
     getShiftReportUseCase = GetShiftReport(repository);
     getStockMovementReportUseCase = GetStockMovementReport(repository);
+    getProductSellingReportUseCase = GetProductSellingReport(repository);
   });
 
   final tStartDate = DateTime(2026, 6, 21);
@@ -167,6 +188,36 @@ void main() {
         (movements) => expect(movements, equals([tMovementItem])),
       );
       expect(repository.getStockMovementReportCalled, isTrue);
+      expect(repository.lastStartDate, tStartDate);
+      expect(repository.lastEndDate, tEndDate);
+    });
+  });
+
+  group('GetProductSellingReport UseCase', () {
+    final tProductSellingReport = ProductSellingReport(
+      startDate: tStartDate,
+      endDate: tEndDate,
+      items: const [
+        ProductSellingItem(
+          productId: 1,
+          productName: 'Kopi Toraja',
+          productSku: 'KOPI-01',
+          quantitySold: 15.0,
+          totalSales: 150000.0,
+        ),
+      ],
+    );
+
+    test('should fetch product selling report from the repository', () async {
+      // Arrange
+      repository.mockProductSellingReport = tProductSellingReport;
+      // Act
+      final result = await getProductSellingReportUseCase(
+        GetProductSellingReportParams(startDate: tStartDate, endDate: tEndDate),
+      );
+      // Assert
+      expect(result, Right(tProductSellingReport));
+      expect(repository.getProductSellingReportCalled, isTrue);
       expect(repository.lastStartDate, tStartDate);
       expect(repository.lastEndDate, tEndDate);
     });

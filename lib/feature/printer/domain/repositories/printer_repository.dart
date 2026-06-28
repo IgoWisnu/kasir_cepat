@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart' hide Order;
 import '../../../../core/errors/failures.dart';
 import '../entities/printer.dart';
+import '../entities/receipt_template.dart';
 import '../../../order/domain/entities/order.dart';
 
 abstract class PrinterRepository {
@@ -24,4 +25,10 @@ abstract class PrinterRepository {
 
   /// Prints a formatted test configuration page to verify alignment and printer state.
   Future<Either<Failure, void>> printTestPage(PrinterDevice printer);
+
+  /// Fetches the receipt template settings.
+  Future<Either<Failure, ReceiptTemplate>> getReceiptTemplate();
+
+  /// Saves or updates the receipt template settings.
+  Future<Either<Failure, void>> saveReceiptTemplate(ReceiptTemplate template);
 }

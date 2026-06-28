@@ -136,6 +136,15 @@ class _PrinterListPageState extends ConsumerState<PrinterListPage> {
             child: Icon(LucideIcons.arrowLeft, color: AppColors.textPrimary),
           ),
         ),
+        actions: [
+          ScaleImpactAnimation(
+            onTap: () => context.push('/settings/receipt-template'),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16.0),
+              child: Icon(LucideIcons.receipt, color: AppColors.textPrimary),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

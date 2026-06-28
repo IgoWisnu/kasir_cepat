@@ -26,7 +26,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -57,6 +57,38 @@ class DatabaseHelper {
       ''');
       // 2. Add shift_id column to orders table
       await db.execute('ALTER TABLE orders ADD COLUMN shift_id INTEGER');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE receipt_templates (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          show_logo INTEGER NOT NULL DEFAULT 1,
+          show_business_name INTEGER NOT NULL DEFAULT 1,
+          business_name_override TEXT,
+          show_business_address INTEGER NOT NULL DEFAULT 1,
+          business_address_override TEXT,
+          show_transaction_id INTEGER NOT NULL DEFAULT 1,
+          show_customer_name INTEGER NOT NULL DEFAULT 1,
+          show_cashier_name INTEGER NOT NULL DEFAULT 1,
+          show_product_sku INTEGER NOT NULL DEFAULT 0,
+          footer_text TEXT
+        )
+      ''');
+      
+      // Seed default template
+      await db.insert('receipt_templates', {
+        'id': 1,
+        'show_logo': 1,
+        'show_business_name': 1,
+        'business_name_override': null,
+        'show_business_address': 1,
+        'business_address_override': null,
+        'show_transaction_id': 1,
+        'show_customer_name': 1,
+        'show_cashier_name': 1,
+        'show_product_sku': 0,
+        'footer_text': 'Terima Kasih Atas Kunjungan Anda\nSimpan Bukti Pembayaran Ini',
+      });
     }
   }
 
@@ -276,6 +308,23 @@ class DatabaseHelper {
       )
     ''');
 
+    // 13. Receipt Templates Table
+    await db.execute('''
+      CREATE TABLE receipt_templates (
+        id $idType,
+        show_logo INTEGER NOT NULL DEFAULT 1,
+        show_business_name INTEGER NOT NULL DEFAULT 1,
+        business_name_override TEXT,
+        show_business_address INTEGER NOT NULL DEFAULT 1,
+        business_address_override TEXT,
+        show_transaction_id INTEGER NOT NULL DEFAULT 1,
+        show_customer_name INTEGER NOT NULL DEFAULT 1,
+        show_cashier_name INTEGER NOT NULL DEFAULT 1,
+        show_product_sku INTEGER NOT NULL DEFAULT 0,
+        footer_text TEXT
+      )
+    ''');
+
     // --- Seeding Default Data ---
     final now = DateTime.now().toIso8601String();
 
@@ -443,6 +492,21 @@ class DatabaseHelper {
     for (var option in defaultPaymentOptions) {
       await db.insert('payment_options', option);
     }
+
+    // Seed default receipt template
+    await db.insert('receipt_templates', {
+      'id': 1,
+      'show_logo': 1,
+      'show_business_name': 1,
+      'business_name_override': null,
+      'show_business_address': 1,
+      'business_address_override': null,
+      'show_transaction_id': 1,
+      'show_customer_name': 1,
+      'show_cashier_name': 1,
+      'show_product_sku': 0,
+      'footer_text': 'Terima Kasih Atas Kunjungan Anda\nSimpan Bukti Pembayaran Ini',
+    });
   }
 
   Future close() async {

@@ -1,6 +1,6 @@
 {
-    "name": "kasir_cepat",
-    "short_name": "kasir_cepat",
+    "name": "Kasir Cepat",
+    "short_name": "Kasir Cepat",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
