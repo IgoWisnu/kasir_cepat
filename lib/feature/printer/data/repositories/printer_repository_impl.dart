@@ -7,6 +7,8 @@ import '../../domain/repositories/printer_repository.dart';
 import '../datasources/printer_local_datasource.dart';
 import '../models/printer_model.dart';
 import '../models/receipt_template_model.dart';
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
+import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 
 class PrinterRepositoryImpl implements PrinterRepository {
   final PrinterLocalDataSource localDataSource;
@@ -71,114 +73,151 @@ class PrinterRepositoryImpl implements PrinterRepository {
       final template = await localDataSource.getReceiptTemplate();
       final business = await localDataSource.getBusinessProfile();
 
-      // Formats the receipt into a text string and prints it to the console log
-      final buffer = StringBuffer();
-      final width = printer.paperSize == 80 ? 40 : 32;
-
-      buffer.writeln('\n');
-      buffer.writeln('=' * width);
-
-      // 1. Business Logo
-      if (template.showLogo) {
-        final logo = business?['logo'] as String?;
-        if (logo != null && logo.isNotEmpty) {
-          buffer.writeln(_centerText('[LOGO: $logo]', width));
-        } else {
-          buffer.writeln(_centerText('[LOGO]', width));
+      // Connect to printer
+      bool isConnected = await PrintBluetoothThermal.connectionStatus;
+      if (!isConnected) {
+        final bool connectResult = await PrintBluetoothThermal.connect(macPrinterAddress: printer.address);
+        if (!connectResult) {
+          return Left(CacheFailure('Gagal terhubung ke printer ${printer.name} (${printer.address})'));
         }
       }
 
-      // 2. Business Name
+      // Initialize generator
+      final profile = await CapabilityProfile.load();
+      final paperSize = printer.paperSize == 80 ? PaperSize.mm80 : PaperSize.mm58;
+      final generator = Generator(paperSize, profile);
+      List<int> bytes = [];
+
+      bytes += generator.reset();
+
+      // 1. Business Logo / Name
       if (template.showBusinessName) {
         final name = (template.businessNameOverride != null && template.businessNameOverride!.trim().isNotEmpty)
             ? template.businessNameOverride!.trim()
             : (business?['name'] as String? ?? 'KASIR CEPAT');
-        buffer.writeln(_centerText(name, width));
+        bytes += generator.text(
+          name,
+          styles: const PosStyles(
+            align: PosAlign.center,
+            bold: true,
+            height: PosTextSize.size2,
+            width: PosTextSize.size2,
+          ),
+        );
       }
 
-      // 3. Business Address
+      // 2. Business Address
       if (template.showBusinessAddress) {
         final address = (template.businessAddressOverride != null && template.businessAddressOverride!.trim().isNotEmpty)
             ? template.businessAddressOverride!.trim()
             : (business?['address'] as String?);
         if (address != null && address.trim().isNotEmpty) {
-          buffer.writeln(_centerText(address, width));
+          bytes += generator.text(
+            address,
+            styles: const PosStyles(align: PosAlign.center),
+          );
         }
       }
 
-      buffer.writeln('=' * width);
-      
-      // 4. Transaction Info
-      buffer.writeln('Nomor Antrean : #${order.orderQueue}');
-      if (template.showTransactionId) {
-        buffer.writeln('No. Invoice   : ${order.invoiceNumber ?? "-"}');
+      bytes += generator.hr();
+
+      // 3. Transaction Info
+      bytes += generator.text('No. Antrean: #${order.orderQueue}', styles: const PosStyles(bold: true));
+      if (template.showTransactionId && order.invoiceNumber != null) {
+        bytes += generator.text('Invoice    : ${order.invoiceNumber}');
       }
-      buffer.writeln('Waktu         : ${order.createdAt}');
-      buffer.writeln('Tipe Pesanan  : ${order.orderType.name.toUpperCase()}');
-      
+      bytes += generator.text('Waktu      : ${order.createdAt.toString().split('.')[0]}');
+      bytes += generator.text('Tipe       : ${order.orderType.name.toUpperCase()}');
+
       if (template.showCustomerName && order.customerName != null) {
-        buffer.writeln('Pelanggan     : ${order.customerName}');
+        bytes += generator.text('Pelanggan  : ${order.customerName}');
       }
 
       if (template.showCashierName && order.userId != null) {
         final cashierName = await localDataSource.getCashierName(order.userId!);
         if (cashierName != null) {
-          buffer.writeln('Kasir         : $cashierName');
+          bytes += generator.text('Kasir      : $cashierName');
         }
       }
 
-      buffer.writeln('-' * width);
+      bytes += generator.hr();
 
-      // 5. Items List
+      // 4. Items List
       for (final item in order.items) {
-        buffer.writeln(item.productName);
-
-        // Show product SKU if config enabled
+        bytes += generator.text(item.productName, styles: const PosStyles(bold: true));
+        
         if (template.showProductSku && item.productId != null) {
           final sku = await localDataSource.getProductSku(item.productId!);
           if (sku != null && sku.trim().isNotEmpty) {
-            buffer.writeln('  SKU: $sku');
+            bytes += generator.text('  SKU: $sku');
           }
         }
 
-        final qtyPrice = '  ${item.qty.toStringAsFixed(0)} x ${_formatCurrency(item.priceAtPurchase)}';
+        final qtyPrice = '${item.qty.toStringAsFixed(0)} x ${_formatCurrency(item.priceAtPurchase)}';
         final sub = _formatCurrency(item.subtotal);
-        buffer.writeln(_rowText(qtyPrice, sub, width));
+        bytes += generator.row([
+          PosColumn(text: qtyPrice, width: 8, styles: const PosStyles(align: PosAlign.left)),
+          PosColumn(text: sub, width: 4, styles: const PosStyles(align: PosAlign.right)),
+        ]);
       }
-      buffer.writeln('-' * width);
 
-      // 6. Summary Totals
-      buffer.writeln(_rowText('Subtotal', _formatCurrency(order.subtotal), width));
+      bytes += generator.hr();
+
+      // 5. Totals
+      bytes += generator.row([
+        PosColumn(text: 'Subtotal', width: 6, styles: const PosStyles(align: PosAlign.left)),
+        PosColumn(text: _formatCurrency(order.subtotal), width: 6, styles: const PosStyles(align: PosAlign.right)),
+      ]);
+
       if (order.discountValue > 0) {
-        buffer.writeln(_rowText('Diskon', '-${_formatCurrency(order.discountValue)}', width));
+        bytes += generator.row([
+          PosColumn(text: 'Diskon', width: 6, styles: const PosStyles(align: PosAlign.left)),
+          PosColumn(text: '-${_formatCurrency(order.discountValue)}', width: 6, styles: const PosStyles(align: PosAlign.right)),
+        ]);
       }
-      buffer.writeln(_rowText('Total', _formatCurrency(order.grandTotal), width));
-      
-      if (order.cashReceived != null) {
-        buffer.writeln(_rowText('Tunai', _formatCurrency(order.cashReceived!), width));
-        buffer.writeln(_rowText('Kembali', _formatCurrency(order.changeGiven!), width));
-      }
-      
-      buffer.writeln('=' * width);
 
-      // 7. Footer text
+      bytes += generator.row([
+        PosColumn(text: 'Total', width: 6, styles: const PosStyles(align: PosAlign.left, bold: true)),
+        PosColumn(text: _formatCurrency(order.grandTotal), width: 6, styles: const PosStyles(align: PosAlign.right, bold: true)),
+      ]);
+
+      if (order.cashReceived != null) {
+        bytes += generator.row([
+          PosColumn(text: 'Bayar Tunai', width: 6, styles: const PosStyles(align: PosAlign.left)),
+          PosColumn(text: _formatCurrency(order.cashReceived!), width: 6, styles: const PosStyles(align: PosAlign.right)),
+        ]);
+        bytes += generator.row([
+          PosColumn(text: 'Kembali', width: 6, styles: const PosStyles(align: PosAlign.left)),
+          PosColumn(text: _formatCurrency(order.changeGiven!), width: 6, styles: const PosStyles(align: PosAlign.right)),
+        ]);
+      }
+
+      bytes += generator.hr();
+
+      // 6. Footer
       final footer = (template.footerText != null && template.footerText!.trim().isNotEmpty)
           ? template.footerText!.trim()
-          : (business?['footer_message'] as String? ?? 'Terima Kasih Atas Kunjungan Anda\nSimpan Bukti Pembayaran Ini');
-      
+          : (business?['footer_message'] as String? ?? 'Terima Kasih\nSimpan Bukti Pembayaran Ini');
+
       for (final line in footer.split('\n')) {
         if (line.trim().isNotEmpty) {
-          buffer.writeln(_centerText(line.trim(), width));
+          bytes += generator.text(line.trim(), styles: const PosStyles(align: PosAlign.center));
         }
       }
 
-      buffer.writeln('=' * width);
-      buffer.writeln('\n');
+      bytes += generator.feed(3);
+      bytes += generator.cut();
 
-      // Prints the receipt directly to developer tools console
-      // ignore: avoid_print
-      print(buffer.toString());
-      
+      // Send bytes to printer
+      final bool printResult = await PrintBluetoothThermal.writeBytes(bytes);
+      if (!printResult) {
+        return Left(CacheFailure('Gagal mengirim data cetak ke printer Bluetooth.'));
+      }
+
+      // Brief delay to allow buffer to print before disconnect
+      await Future.delayed(const Duration(seconds: 1));
+      await PrintBluetoothThermal.disconnect;
+
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure('Gagal melakukan pencetakan: $e'));
@@ -188,46 +227,54 @@ class PrinterRepositoryImpl implements PrinterRepository {
   @override
   Future<Either<Failure, void>> printTestPage(PrinterDevice printer) async {
     try {
-      final buffer = StringBuffer();
-      final width = printer.paperSize == 80 ? 40 : 32;
+      // Connect to printer
+      bool isConnected = await PrintBluetoothThermal.connectionStatus;
+      if (!isConnected) {
+        final bool connectResult = await PrintBluetoothThermal.connect(macPrinterAddress: printer.address);
+        if (!connectResult) {
+          return Left(CacheFailure('Gagal terhubung ke printer ${printer.name} (${printer.address})'));
+        }
+      }
 
-      buffer.writeln('\n');
-      buffer.writeln('=' * width);
-      buffer.writeln(_centerText('TEST PRINTER KASIR CEPAT', width));
-      buffer.writeln('=' * width);
-      buffer.writeln('Nama Device : ${printer.name}');
-      buffer.writeln('Tipe Koneksi: ${printer.connectionType.name.toUpperCase()}');
-      buffer.writeln('Alamat      : ${printer.address}');
-      buffer.writeln('Lebar Kertas: ${printer.paperSize} mm ($width kolom)');
-      buffer.writeln('Status      : ${printer.status.name.toUpperCase()}');
-      buffer.writeln('Kitchen     : ${printer.isKitchenPrinter ? 'YA' : 'TIDAK'}');
-      buffer.writeln('Default     : ${printer.isDefault ? 'YA' : 'TIDAK'}');
-      buffer.writeln('-' * width);
-      
-      // Alignment check lines
-      buffer.writeln('Tes Alignment:');
-      buffer.writeln('${'[Kiri]'.padRight(width - 6)}[Kiri]');
-      buffer.writeln(_centerText('[Tengah]', width));
-      buffer.writeln('[Kanan]'.padLeft(width));
-      buffer.writeln('-' * width);
-      
-      // Character test
-      buffer.writeln('Tes Karakter:');
-      buffer.writeln('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
-      buffer.writeln('abcdefghijklmnopqrstuvwxyz');
-      buffer.writeln('0123456789 !@#\$%^&*()_+');
-      buffer.writeln('=' * width);
-      buffer.writeln(_centerText('TEST PRINT SUCCESS', width));
-      buffer.writeln('=' * width);
-      buffer.writeln('\n');
+      final profile = await CapabilityProfile.load();
+      final paperSize = printer.paperSize == 80 ? PaperSize.mm80 : PaperSize.mm58;
+      final generator = Generator(paperSize, profile);
+      List<int> bytes = [];
 
-      // Prints the test receipt directly to developer tools console
-      // ignore: avoid_print
-      print(buffer.toString());
+      bytes += generator.reset();
+      bytes += generator.text(
+        'TEST PRINTER KASIR CEPAT',
+        styles: const PosStyles(
+          align: PosAlign.center,
+          bold: true,
+          height: PosTextSize.size2,
+          width: PosTextSize.size2,
+        ),
+      );
+      bytes += generator.hr();
+      bytes += generator.text('Nama Device  : ${printer.name}');
+      bytes += generator.text('Alamat MAC   : ${printer.address}');
+      bytes += generator.text('Lebar Kertas : ${printer.paperSize}mm');
+      bytes += generator.text('Status       : KONEKSI BERHASIL');
+      bytes += generator.hr();
+      bytes += generator.text(
+        'Printer Berfungsi Normal',
+        styles: const PosStyles(align: PosAlign.center),
+      );
+      bytes += generator.feed(3);
+      bytes += generator.cut();
+
+      final bool printResult = await PrintBluetoothThermal.writeBytes(bytes);
+      if (!printResult) {
+        return Left(CacheFailure('Gagal mengirim data halaman uji ke printer Bluetooth.'));
+      }
+
+      await Future.delayed(const Duration(seconds: 1));
+      await PrintBluetoothThermal.disconnect;
 
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure('Gagal melakukan cetak uji coba: $e'));
+      return Left(CacheFailure('Gagal mencetak halaman uji: $e'));
     }
   }
 
@@ -252,17 +299,7 @@ class PrinterRepositoryImpl implements PrinterRepository {
     }
   }
 
-  String _centerText(String text, int width) {
-    if (text.length >= width) return text.substring(0, width);
-    final spaces = (width - text.length) ~/ 2;
-    return ' ' * spaces + text;
-  }
 
-  String _rowText(String left, String right, int width) {
-    final availableSpace = width - left.length - right.length;
-    if (availableSpace <= 0) return '$left $right';
-    return left + ' ' * availableSpace + right;
-  }
 
   String _formatCurrency(double val) {
     return 'Rp ${val.toStringAsFixed(0)}';

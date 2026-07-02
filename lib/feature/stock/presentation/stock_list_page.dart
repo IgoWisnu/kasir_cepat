@@ -6,6 +6,7 @@ import '../../../../core/themes/app_colors.dart';
 import '../../../../core/utils/impact_animation.dart';
 import '../../product/domain/entities/product.dart';
 import '../../product/presentation/provider/product_provider.dart';
+import '../../product/presentation/widgets/product_thumbnail.dart';
 import '../../categories/presentation/provider/category_provider.dart';
 import 'widgets/stock_adjustment_sheet.dart';
 
@@ -36,38 +37,6 @@ class _StockListPageState extends ConsumerState<StockListPage> {
     _searchController.dispose();
     super.dispose();
   }
-
-  IconData _getIconData(String? iconName) {
-    switch (iconName) {
-      case 'coffee':
-        return LucideIcons.coffee;
-      case 'sandwich':
-        return LucideIcons.sandwich;
-      case 'glassWater':
-        return LucideIcons.glassWater;
-      case 'cake':
-        return LucideIcons.cake;
-      case 'iceCream':
-        return LucideIcons.iceCream;
-      case 'apple':
-        return LucideIcons.apple;
-      case 'shoppingBag':
-        return LucideIcons.shoppingBag;
-      case 'cookie':
-        return LucideIcons.cookie;
-      case 'soup':
-        return LucideIcons.soup;
-      case 'pizza':
-        return LucideIcons.pizza;
-      case 'gift':
-        return LucideIcons.gift;
-      case 'shirt':
-        return LucideIcons.shirt;
-      default:
-        return LucideIcons.shoppingBag;
-    }
-  }
-
   void _showAdjustmentBottomSheet(Product product) {
     showModalBottomSheet(
       context: context,
@@ -373,18 +342,12 @@ class _StockListPageState extends ConsumerState<StockListPage> {
         child: Row(
           children: [
             // Product Icon Avatar
-            Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: isTracked ? AppColors.primaryLight : Colors.grey[100],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                _getIconData(product.imagePath),
-                color: isTracked ? AppColors.primary : AppColors.textLight,
-                size: 24,
-              ),
+            ProductThumbnail(
+              imagePath: product.imagePath,
+              size: 50,
+              iconSize: 24,
+              color: isTracked ? AppColors.primaryLight : Colors.grey[100],
+              iconColor: isTracked ? AppColors.primary : AppColors.textLight,
             ),
             const SizedBox(width: 12),
 

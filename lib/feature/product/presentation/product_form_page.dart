@@ -1,7 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import '../../../../core/themes/app_colors.dart';
 import '../../../../core/utils/impact_animation.dart';
 import '../../../../core/utils/toast_helper.dart';
@@ -41,6 +45,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
   bool _isTrackStock = false;
   bool _isAvailable = true;
   bool _isSaving = false;
+  String? _customImagePath;
 
   // Predefined icons list for product selection
   final List<Map<String, dynamic>> _predefinedIcons = [
@@ -73,7 +78,12 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       
       _selectedCategoryId = prod.categoryId;
       _selectedUnitId = prod.unitId;
-      _selectedIcon = prod.imagePath ?? 'shoppingBag';
+      final img = prod.imagePath;
+      if (img != null && (img.startsWith('/') || img.contains('\\') || img.contains(':'))) {
+        _customImagePath = img;
+      } else {
+        _selectedIcon = img ?? 'shoppingBag';
+      }
       _isTrackStock = prod.isTrackStock;
       _isAvailable = prod.status == ProductStatus.available;
     } else {
@@ -91,6 +101,107 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
     _descController.dispose();
     _stockController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        final directory = await getApplicationDocumentsDirectory();
+        final String path = directory.path;
+        final String fileExtension = p.extension(pickedFile.path).isEmpty ? '.jpg' : p.extension(pickedFile.path);
+        final String fileName = 'product_${DateTime.now().millisecondsSinceEpoch}$fileExtension';
+        
+        final File localImage = await File(pickedFile.path).copy('$path/$fileName');
+        
+        setState(() {
+          _customImagePath = localImage.path;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastHelper.showError(context, 'Gagal memilih gambar: $e');
+      }
+    }
+  }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Pilih Sumber Foto Produk',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    ScaleImpactAnimation(
+                      onTap: () {
+                        context.pop();
+                        _pickImage(ImageSource.camera);
+                      },
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primaryLight,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.camera, color: AppColors.primary, size: 28),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Kamera', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                    ScaleImpactAnimation(
+                      onTap: () {
+                        context.pop();
+                        _pickImage(ImageSource.gallery);
+                      },
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: const BoxDecoration(
+                              color: AppColors.primaryLight,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.image, color: AppColors.primary, size: 28),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text('Galeri', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _onSave() async {
@@ -118,7 +229,7 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
       sellingPrice: sellingPrice,
       costPrice: costPriceVal,
       description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
-      imagePath: _selectedIcon,
+      imagePath: _customImagePath ?? _selectedIcon,
       status: _isAvailable ? ProductStatus.available : ProductStatus.unavailable,
       isTrackStock: _isTrackStock,
       stockQuantity: stockQty,
@@ -210,9 +321,9 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                         ),
                         const SizedBox(height: 16),
                         
-                        // Icon Picker row
+                        // Custom Image Picker Section
                         const Text(
-                          'Pilih Icon Produk',
+                          'Foto Produk (Opsional)',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -220,58 +331,154 @@ class _ProductFormPageState extends ConsumerState<ProductFormPage> {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        SizedBox(
-                          height: 76,
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            itemCount: _predefinedIcons.length,
-                            itemBuilder: (context, index) {
-                              final item = _predefinedIcons[index];
-                              final isSelected = _selectedIcon == item['name'];
-
-                              return Padding(
-                                padding: const EdgeInsets.only(right: 12, top: 4, bottom: 4),
-                                child: ScaleImpactAnimation(
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedIcon = item['name'] as String;
-                                    });
-                                  },
-                                  child: Column(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: isSelected ? AppColors.primary : Colors.grey[100],
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: isSelected ? AppColors.primary : Colors.transparent,
-                                            width: 1.5,
+                        Row(
+                          children: [
+                            ScaleImpactAnimation(
+                              onTap: _showImagePickerOptions,
+                              child: Container(
+                                width: 90,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[50],
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: AppColors.border,
+                                    width: 1.5,
+                                    style: BorderStyle.solid,
+                                  ),
+                                ),
+                                child: _customImagePath != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: Image.file(
+                                          File(_customImagePath!),
+                                          fit: BoxFit.cover,
+                                        ),
+                                      )
+                                    : const Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(LucideIcons.camera, color: AppColors.textLight, size: 24),
+                                          SizedBox(height: 4),
+                                          Text(
+                                            'Pilih Foto',
+                                            style: TextStyle(fontSize: 10, color: AppColors.textLight, fontWeight: FontWeight.bold),
                                           ),
-                                        ),
-                                        child: Icon(
-                                          item['icon'] as IconData,
-                                          color: isSelected ? Colors.white : AppColors.textSecondary,
-                                          size: 20,
-                                        ),
+                                        ],
                                       ),
-                                      const SizedBox(height: 4),
+                              ),
+                            ),
+                            if (_customImagePath != null) ...[
+                              const SizedBox(width: 16),
+                              ScaleImpactAnimation(
+                                onTap: () {
+                                  setState(() {
+                                    _customImagePath = null;
+                                  });
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(LucideIcons.trash2, color: Colors.red[700], size: 16),
+                                      const SizedBox(width: 6),
                                       Text(
-                                        item['label'] as String,
-                                        style: TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                          color: isSelected ? AppColors.primary : AppColors.textLight,
-                                        ),
+                                        'Hapus Foto',
+                                        style: TextStyle(color: Colors.red[700], fontSize: 12, fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
                                 ),
-                              );
-                            },
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Predefined Icon Selector (dimmed if custom image is present)
+                        Opacity(
+                          opacity: _customImagePath != null ? 0.4 : 1.0,
+                          child: IgnorePointer(
+                            ignoring: _customImagePath != null,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Atau Pilih Icon Bawaan',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                SizedBox(
+                                  height: 76,
+                                  child: ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: _predefinedIcons.length,
+                                    itemBuilder: (context, index) {
+                                      final item = _predefinedIcons[index];
+                                      final isSelected = _selectedIcon == item['name'];
+
+                                      return Padding(
+                                        padding: const EdgeInsets.only(right: 12, top: 4, bottom: 4),
+                                        child: ScaleImpactAnimation(
+                                          onTap: () {
+                                            setState(() {
+                                              _selectedIcon = item['name'] as String;
+                                            });
+                                          },
+                                          child: Column(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(10),
+                                                decoration: BoxDecoration(
+                                                  color: isSelected ? AppColors.primary : Colors.grey[100],
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(
+                                                    color: isSelected ? AppColors.primary : Colors.transparent,
+                                                    width: 1.5,
+                                                  ),
+                                                ),
+                                                child: Icon(
+                                                  item['icon'] as IconData,
+                                                  color: isSelected ? Colors.white : AppColors.textSecondary,
+                                                  size: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                item['label'] as String,
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                                  color: isSelected ? AppColors.primary : AppColors.textLight,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
+                        if (_customImagePath != null) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            'Menggunakan foto produk di atas. Preset icon diabaikan.',
+                            style: TextStyle(fontSize: 11, color: Colors.blue[800], fontStyle: FontStyle.italic),
+                          ),
+                        ],
                       ],
                     ),
                     const SizedBox(height: 16),

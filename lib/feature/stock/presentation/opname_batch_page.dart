@@ -7,6 +7,7 @@ import '../../../../core/utils/impact_animation.dart';
 import '../../../../core/utils/toast_helper.dart';
 import '../../product/domain/entities/product.dart';
 import '../../product/presentation/provider/product_provider.dart';
+import '../../product/presentation/widgets/product_thumbnail.dart';
 import 'provider/stock_provider.dart';
 import '../domain/usecases/create_opname_batch.dart';
 
@@ -30,38 +31,6 @@ class _OpnameBatchPageState extends ConsumerState<OpnameBatchPage> {
     _notesController.dispose();
     super.dispose();
   }
-
-  IconData _getIconData(String? iconName) {
-    switch (iconName) {
-      case 'coffee':
-        return LucideIcons.coffee;
-      case 'sandwich':
-        return LucideIcons.sandwich;
-      case 'glassWater':
-        return LucideIcons.glassWater;
-      case 'cake':
-        return LucideIcons.cake;
-      case 'iceCream':
-        return LucideIcons.iceCream;
-      case 'apple':
-        return LucideIcons.apple;
-      case 'shoppingBag':
-        return LucideIcons.shoppingBag;
-      case 'cookie':
-        return LucideIcons.cookie;
-      case 'soup':
-        return LucideIcons.soup;
-      case 'pizza':
-        return LucideIcons.pizza;
-      case 'gift':
-        return LucideIcons.gift;
-      case 'shirt':
-        return LucideIcons.shirt;
-      default:
-        return LucideIcons.shoppingBag;
-    }
-  }
-
   Future<void> _onSave(List<Product> trackingProducts) async {
     // Collect final maps where physical count was edited (we can pass all reviewed products,
     // since the datasource skips adjustments when offset is 0, but to be clean, we can just pass the ones that were reviewed/initialized)
@@ -270,18 +239,12 @@ class _OpnameBatchPageState extends ConsumerState<OpnameBatchPage> {
         child: Row(
           children: [
             // Icon
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                _getIconData(product.imagePath),
-                color: Colors.blue,
-                size: 20,
-              ),
+            ProductThumbnail(
+              imagePath: product.imagePath,
+              size: 44,
+              iconSize: 20,
+              color: Colors.blue[50],
+              iconColor: Colors.blue,
             ),
             const SizedBox(width: 12),
 

@@ -1,4 +1,4 @@
-package com.example.kasir_cepat
+package com.igowisnu.kasir_cepat
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -52,7 +52,10 @@ class CartState {
   });
 
   double get subtotal => items.fold(0.0, (sum, item) => sum + item.subtotal);
-  double get totalDiscount => items.fold(0.0, (sum, item) => sum + (item.discountValue * item.quantity));
+  double get totalDiscount => items.fold(
+    0.0,
+    (sum, item) => sum + (item.discountValue * item.quantity),
+  );
   double get grandTotal => subtotal; // we can add tax or discounts here
 
   CartState copyWith({
@@ -84,10 +87,17 @@ class CartNotifier extends StateNotifier<CartState> {
     if (idx != -1) {
       final existingItem = state.items[idx];
       final updatedList = List<CartItem>.from(state.items);
-      updatedList[idx] = existingItem.copyWith(quantity: existingItem.quantity + qty);
+      updatedList[idx] = existingItem.copyWith(
+        quantity: existingItem.quantity + qty,
+      );
       state = state.copyWith(items: updatedList);
     } else {
-      state = state.copyWith(items: [...state.items, CartItem(product: product, quantity: qty)]);
+      state = state.copyWith(
+        items: [
+          ...state.items,
+          CartItem(product: product, quantity: qty),
+        ],
+      );
     }
   }
 

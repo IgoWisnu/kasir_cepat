@@ -129,7 +129,7 @@ class _EndShiftSheetState extends ConsumerState<EndShiftSheet> {
   Widget build(BuildContext context) {
     final activeShift = ref.watch(shiftProvider).value;
     final activeUser = ref.watch(activeUserProvider);
-    final cashierName = activeUser?['name'] ?? 'Kasir';
+    final cashierName = activeUser?.name ?? 'Kasir';
 
     if (activeShift == null) {
       return Container(

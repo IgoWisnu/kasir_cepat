@@ -50,7 +50,7 @@ class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
 
     final cashStart = double.tryParse(_cashController.text) ?? 0.0;
     final activeUser = ref.read(activeUserProvider);
-    final userId = activeUser?['id'] as int?;
+    final userId = activeUser?.id;
 
     final success = await ref.read(shiftProvider.notifier).startNewShift(
       cashStart: cashStart,
@@ -75,7 +75,7 @@ class _OpenShiftSheetState extends ConsumerState<OpenShiftSheet> {
   @override
   Widget build(BuildContext context) {
     final activeUser = ref.watch(activeUserProvider);
-    final cashierName = activeUser?['name'] ?? 'Kasir';
+    final cashierName = activeUser?.name ?? 'Kasir';
 
     return Padding(
       padding: EdgeInsets.only(

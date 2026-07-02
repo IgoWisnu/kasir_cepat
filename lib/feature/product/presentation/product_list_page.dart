@@ -9,6 +9,7 @@ import '../../../../core/utils/toast_helper.dart';
 import '../domain/entities/product.dart';
 import 'provider/product_provider.dart';
 import '../../categories/presentation/provider/category_provider.dart';
+import 'widgets/product_thumbnail.dart';
 
 class ProductListPage extends ConsumerStatefulWidget {
   const ProductListPage({super.key});
@@ -45,37 +46,6 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
       decimalDigits: 0,
     );
     return formatter.format(amount);
-  }
-
-  IconData _getIconData(String? iconName) {
-    switch (iconName) {
-      case 'coffee':
-        return LucideIcons.coffee;
-      case 'sandwich':
-        return LucideIcons.sandwich;
-      case 'glassWater':
-        return LucideIcons.glassWater;
-      case 'cake':
-        return LucideIcons.cake;
-      case 'iceCream':
-        return LucideIcons.iceCream;
-      case 'apple':
-        return LucideIcons.apple;
-      case 'shoppingBag':
-        return LucideIcons.shoppingBag;
-      case 'cookie':
-        return LucideIcons.cookie;
-      case 'soup':
-        return LucideIcons.soup;
-      case 'pizza':
-        return LucideIcons.pizza;
-      case 'gift':
-        return LucideIcons.gift;
-      case 'shirt':
-        return LucideIcons.shirt;
-      default:
-        return LucideIcons.shoppingBag;
-    }
   }
 
   Future<void> _onDeleteProduct(Product product) async {
@@ -286,22 +256,16 @@ class _ProductListPageState extends ConsumerState<ProductListPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Left Icon / Image Placeholder
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: product.status == ProductStatus.available
-                    ? AppColors.primaryLight
-                    : Colors.grey[200],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                _getIconData(product.imagePath),
-                color: product.status == ProductStatus.available
-                    ? AppColors.primary
-                    : AppColors.textLight,
-                size: 26,
-              ),
+            ProductThumbnail(
+              imagePath: product.imagePath,
+              size: 56,
+              iconSize: 26,
+              color: product.status == ProductStatus.available
+                  ? AppColors.primaryLight
+                  : Colors.grey[200],
+              iconColor: product.status == ProductStatus.available
+                  ? AppColors.primary
+                  : AppColors.textLight,
             ),
             const SizedBox(width: 12),
 

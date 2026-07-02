@@ -7,6 +7,7 @@ import '../../../../core/utils/impact_animation.dart';
 import '../../../../core/utils/toast_helper.dart';
 import '../../product/domain/entities/product.dart';
 import '../../product/presentation/provider/product_provider.dart';
+import '../../product/presentation/widgets/product_thumbnail.dart';
 import 'provider/stock_provider.dart';
 import '../domain/usecases/create_restock_batch.dart';
 
@@ -31,38 +32,6 @@ class _RestockBatchPageState extends ConsumerState<RestockBatchPage> {
     _refController.dispose();
     super.dispose();
   }
-
-  IconData _getIconData(String? iconName) {
-    switch (iconName) {
-      case 'coffee':
-        return LucideIcons.coffee;
-      case 'sandwich':
-        return LucideIcons.sandwich;
-      case 'glassWater':
-        return LucideIcons.glassWater;
-      case 'cake':
-        return LucideIcons.cake;
-      case 'iceCream':
-        return LucideIcons.iceCream;
-      case 'apple':
-        return LucideIcons.apple;
-      case 'shoppingBag':
-        return LucideIcons.shoppingBag;
-      case 'cookie':
-        return LucideIcons.cookie;
-      case 'soup':
-        return LucideIcons.soup;
-      case 'pizza':
-        return LucideIcons.pizza;
-      case 'gift':
-        return LucideIcons.gift;
-      case 'shirt':
-        return LucideIcons.shirt;
-      default:
-        return LucideIcons.shoppingBag;
-    }
-  }
-
   Future<void> _onSave() async {
     final filteredItems = Map<int, double>.fromEntries(
       _quantities.entries.where((e) => e.value > 0),
@@ -248,18 +217,12 @@ class _RestockBatchPageState extends ConsumerState<RestockBatchPage> {
         child: Row(
           children: [
             // Icon
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: AppColors.primaryLight,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                _getIconData(product.imagePath),
-                color: AppColors.primary,
-                size: 20,
-              ),
+            ProductThumbnail(
+              imagePath: product.imagePath,
+              size: 44,
+              iconSize: 20,
+              color: AppColors.primaryLight,
+              iconColor: AppColors.primary,
             ),
             const SizedBox(width: 12),
 

@@ -131,7 +131,7 @@ class _PaymentPageState extends ConsumerState<PaymentPage> {
       subtotal: cart.subtotal,
       grandTotal: cart.grandTotal,
       notes: cart.notes.isEmpty ? null : cart.notes,
-      userId: activeUser?['id'] as int?,
+      userId: activeUser?.id,
       shiftId: activeShift?.id,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),

@@ -53,6 +53,8 @@ dependencies:
   lucide_icons: ^0.257.0
   image_picker: ^1.2.2
   path_provider: ^2.1.5
+  print_bluetooth_thermal: ^1.2.1
+  esc_pos_utils_plus: ^2.0.2
 
 dev_dependencies:
   flutter_test:
@@ -66,6 +68,7 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.4.0
   riverpod_generator: ^2.3.3
+  flutter_launcher_icons: ^0.14.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -80,6 +83,8 @@ flutter:
 
   assets:
     - assets/logo/logo.png
+    - assets/image/image_1.jpeg
+    - assets/image/image_2.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -103,6 +108,13 @@ flutter:
   #       - asset: fonts/TrajanPro.ttf
   #       - asset: fonts/TrajanPro_Bold.ttf
   #         weight: 700
-  #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/logo/logo.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#C92327"
+  adaptive_icon_foreground: "assets/logo/logo.png"

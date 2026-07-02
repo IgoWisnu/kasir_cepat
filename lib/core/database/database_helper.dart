@@ -26,7 +26,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -90,6 +90,9 @@ class DatabaseHelper {
         'footer_text': 'Terima Kasih Atas Kunjungan Anda\nSimpan Bukti Pembayaran Ini',
       });
     }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE users ADD COLUMN is_first_login INTEGER NOT NULL DEFAULT 1');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -124,6 +127,7 @@ class DatabaseHelper {
         pin $textType,
         role $textType,
         is_active $integerType DEFAULT 1,
+        is_first_login $integerType DEFAULT 1,
         created_at $textType
       )
     ''');

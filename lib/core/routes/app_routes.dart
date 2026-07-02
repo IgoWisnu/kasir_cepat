@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../feature/auth/presentation/login_page.dart';
+import '../../feature/auth/presentation/first_time_login_page.dart';
 import '../../feature/auth/presentation/splash_page.dart';
 import '../../feature/bussiness/presentation/business_profile_page.dart';
 import '../../feature/bussiness/presentation/dashboard_page.dart';
@@ -26,6 +27,10 @@ import '../../feature/report/presentation/sales_report_page.dart';
 import '../../feature/report/presentation/shift_report_page.dart';
 import '../../feature/report/presentation/stock_movement_report_page.dart';
 import '../../feature/report/presentation/product_selling_report_page.dart';
+import '../../feature/user/presentation/settings_page.dart';
+import '../../feature/user/presentation/user_list_page.dart';
+import '../../feature/user/presentation/user_form_page.dart';
+import '../../feature/user/domain/entities/user.dart';
 
 class AppRouter {
   AppRouter._();
@@ -43,6 +48,11 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginPage(),
+      ),
+      // First-time login walkthrough & setup route
+      GoRoute(
+        path: '/first-time-login',
+        builder: (context, state) => const FirstTimeLoginPage(),
       ),
       // Dashboard menu route
       GoRoute(
@@ -108,11 +118,26 @@ class AppRouter {
       ),
       GoRoute(
         path: '/settings',
+        builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        path: '/settings/printers',
         builder: (context, state) => const PrinterListPage(),
       ),
       GoRoute(
         path: '/settings/receipt-template',
         builder: (context, state) => const ReceiptTemplatePage(),
+      ),
+      GoRoute(
+        path: '/settings/users',
+        builder: (context, state) => const UserListPage(),
+      ),
+      GoRoute(
+        path: '/settings/users/form',
+        builder: (context, state) {
+          final user = state.extra as User?;
+          return UserFormPage(editingUser: user);
+        },
       ),
       GoRoute(
         path: '/payment-options',

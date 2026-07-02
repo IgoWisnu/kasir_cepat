@@ -8,6 +8,7 @@ import '../../../../core/utils/toast_helper.dart';
 import '../../../../core/utils/impact_animation.dart';
 import '../../product/domain/entities/product.dart';
 import '../../product/presentation/provider/product_provider.dart';
+import '../../product/presentation/widgets/product_thumbnail.dart';
 import '../../categories/presentation/provider/category_provider.dart';
 import '../../order/domain/entities/order.dart';
 import '../../order/domain/entities/order_item.dart';
@@ -121,7 +122,7 @@ class _PosPageState extends ConsumerState<PosPage> {
       subtotal: cart.subtotal,
       grandTotal: cart.grandTotal,
       notes: _orderNotesController.text.trim().isEmpty ? null : _orderNotesController.text.trim(),
-      userId: activeUser?['id'] as int?,
+      userId: activeUser?.id,
       shiftId: activeShift?.id,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -483,18 +484,12 @@ class _PosPageState extends ConsumerState<PosPage> {
           children: [
             // Dummy visual thumbnail (Red Tint Badge matching Kasir Cepat)
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  LucideIcons.package,
-                  color: isOutOfStock ? AppColors.textLight : AppColors.primary,
-                  size: 32,
-                ),
+              child: ProductThumbnail(
+                imagePath: product.imagePath,
+                size: double.infinity,
+                iconSize: 32,
+                color: AppColors.primaryLight,
+                iconColor: isOutOfStock ? AppColors.textLight : AppColors.primary,
               ),
             ),
             const SizedBox(height: 10),

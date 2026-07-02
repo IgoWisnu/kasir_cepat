@@ -7,6 +7,7 @@ import '../../../../core/utils/impact_animation.dart';
 import '../../../../core/utils/toast_helper.dart';
 import '../../domain/entities/printer.dart';
 import '../provider/printer_provider.dart';
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 class PrinterFormSheet extends ConsumerStatefulWidget {
   final PrinterDevice? editingPrinter;
@@ -65,110 +66,141 @@ class _PrinterFormSheetState extends ConsumerState<PrinterFormSheet> {
       _isScanningBluetooth = true;
     });
 
-    final mockDevices = [
-      {'name': 'RPP02N Thermal Printer', 'address': '00:11:22:AA:BB:CC', 'paperSize': 58},
-      {'name': 'MTP-II Mobile Printer', 'address': 'AA:BB:CC:11:22:33', 'paperSize': 58},
-      {'name': 'EPSON TM-T82 Bluetooth', 'address': '00:1B:43:56:D2:91', 'paperSize': 80},
-      {'name': 'Zjiang ZJ-5802 Bluetooth', 'address': '86:B2:3F:89:10:C4', 'paperSize': 58},
-      {'name': 'Panda PRJ-58D BT', 'address': '00:E0:4C:68:0F:77', 'paperSize': 58},
-    ];
+    try {
+      final bool hasPermission = await PrintBluetoothThermal.isPermissionBluetoothGranted;
+      if (!hasPermission) {
+        if (mounted) {
+          ToastHelper.showError(context, 'Izin Bluetooth/Lokasi tidak diberikan');
+        }
+        return;
+      }
 
-    if (!mounted) return;
+      final bool isBluetoothEnabled = await PrintBluetoothThermal.bluetoothEnabled;
+      if (!isBluetoothEnabled) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Row(
+                children: [
+                  Icon(LucideIcons.bluetooth, color: Colors.orange),
+                  SizedBox(width: 8),
+                  Text('Bluetooth Tidak Aktif', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              content: const Text(
+                'Bluetooth di HP Anda dinonaktifkan.\n\nSilakan aktifkan Bluetooth Anda terlebih dahulu di pengaturan HP untuk memindai printer thermal.',
+                style: TextStyle(fontSize: 14),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('Oke, Mengerti', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          );
+        }
+        return;
+      }
 
-    final selectedDevice = await showDialog<Map<String, dynamic>>(
-      context: context,
-      barrierDismissible: true,
-      builder: (context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
-            children: [
-              Icon(LucideIcons.bluetooth, color: AppColors.primary),
-              SizedBox(width: 8),
-              Text('Pindai Printer BT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      final List<BluetoothInfo> results = await PrintBluetoothThermal.pairedBluetooths;
+      
+      if (!mounted) return;
+
+      if (results.isEmpty) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            title: const Row(
+              children: [
+                Icon(LucideIcons.info, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('Printer Tidak Ditemukan', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: const Text(
+              'Tidak ditemukan printer Bluetooth yang terhubung.\n\nLangkah Penyelesaian:\n1. Pastikan printer thermal Anda sudah menyala.\n2. Buka Pengaturan Bluetooth HP Anda, cari printer thermal, lalu pasangkan/hubungkan (pair) terlebih dahulu.\n3. Kembali ke aplikasi Kasir Cepat lalu coba pindai kembali.',
+              style: TextStyle(fontSize: 14, height: 1.4),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => context.pop(),
+                child: const Text('Oke, Mengerti', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+              ),
             ],
           ),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 250,
-            child: FutureBuilder(
-              future: Future.delayed(const Duration(milliseconds: 1500)),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(color: AppColors.primary),
-                      SizedBox(height: 16),
-                      Text(
-                        'Mencari printer Bluetooth terdekat...',
-                        style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                      ),
-                    ],
-                  );
-                }
-
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: mockDevices.length,
-                  itemBuilder: (context, index) {
-                    final dev = mockDevices[index];
-                    return ListTile(
-                      leading: const Icon(LucideIcons.printer, color: AppColors.primary),
-                      title: Text(
-                        dev['name'] as String,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                      ),
-                      subtitle: Text('MAC: ${dev['address']}', style: const TextStyle(fontSize: 12)),
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${dev['paperSize']}mm',
-                          style: TextStyle(
-                            color: Colors.blue[700],
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      onTap: () {
-                        Navigator.of(context).pop(dev);
-                      },
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
-            )
-          ],
         );
-      },
-    );
+        return;
+      }
 
-    setState(() {
-      _isScanningBluetooth = false;
-    });
+      final selectedDevice = await showDialog<BluetoothInfo>(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(LucideIcons.bluetooth, color: AppColors.primary),
+                SizedBox(width: 8),
+                Text('Pindai Printer BT', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: SizedBox(
+              width: double.maxFinite,
+              height: 250,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: results.length,
+                itemBuilder: (context, index) {
+                  final dev = results[index];
+                  final String name = dev.name.isEmpty ? 'Perangkat Tidak Dikenal' : dev.name;
+                  return ListTile(
+                    leading: const Icon(LucideIcons.printer, color: AppColors.primary),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                    ),
+                    subtitle: Text('MAC: ${dev.macAdress}', style: const TextStyle(fontSize: 12)),
+                    onTap: () {
+                      Navigator.of(context).pop(dev);
+                    },
+                  );
+                },
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Batal', style: TextStyle(color: AppColors.textSecondary)),
+              )
+            ],
+          );
+        },
+      );
 
-    if (selectedDevice != null && mounted) {
-      setState(() {
-        if (_nameController.text.trim().isEmpty ||
-            _nameController.text == 'Printer Kasir' ||
-            _nameController.text == 'Printer Dapur') {
-          _nameController.text = selectedDevice['name'] as String;
-        }
-        _addressController.text = selectedDevice['address'] as String;
-        _paperSize = selectedDevice['paperSize'] as int;
-      });
-      ToastHelper.showSuccess(context, 'Perangkat Bluetooth berhasil dipilih!');
+      if (selectedDevice != null && mounted) {
+        setState(() {
+          final String name = selectedDevice.name.isEmpty ? 'Printer BT' : selectedDevice.name;
+          _nameController.text = name;
+          _addressController.text = selectedDevice.macAdress;
+          _paperSize = 58; // Default paper size for BT printers
+        });
+        ToastHelper.showSuccess(context, 'Perangkat Bluetooth berhasil dipilih!');
+      }
+    } catch (e) {
+      if (mounted) {
+        ToastHelper.showError(context, 'Gagal memindai: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isScanningBluetooth = false;
+        });
+      }
     }
   }
 

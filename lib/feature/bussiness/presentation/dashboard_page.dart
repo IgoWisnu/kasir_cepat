@@ -244,7 +244,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
 
   Widget _buildHeader() {
     final activeUser = ref.watch(activeUserProvider);
-    final cashierName = activeUser?['name'] ?? 'Kasir';
+    final cashierName = activeUser?.name ?? 'Kasir';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,117 +274,98 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         final String? phone = business?.phone;
         final String? address = business?.address;
 
-        return ScaleImpactAnimation(
-          onTap: () {
-            context.push('/business-profile');
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: AppColors.shadow,
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.primaryLight,
-                        width: 2,
-                      ),
-                    ),
-                    child: _buildBusinessAvatar(
-                      businessState,
-                      size: 54,
-                      iconSize: 26,
+        return Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadow,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primaryLight,
+                      width: 2,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
+                  child: _buildBusinessAvatar(
+                    businessState,
+                    size: 54,
+                    iconSize: 26,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
                         ),
-                        const SizedBox(height: 4),
-                        if (address != null && address.isNotEmpty) ...[
-                          Row(
-                            children: [
-                              const Icon(
-                                LucideIcons.mapPin,
-                                size: 12,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  address,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                        ],
-                        if (phone != null && phone.isNotEmpty) ...[
-                          Row(
-                            children: [
-                              const Icon(
-                                LucideIcons.phone,
-                                size: 12,
-                                color: AppColors.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                phone,
+                      ),
+                      const SizedBox(height: 4),
+                      if (address != null && address.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              LucideIcons.mapPin,
+                              size: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                address,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
                                 ),
                               ),
-                            ],
-                          ),
-                        ] else ...[
-                          const Text(
-                            'Tap untuk atur profil bisnis',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textLight,
-                              fontStyle: FontStyle.italic,
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
                       ],
-                    ),
+                      if (phone != null && phone.isNotEmpty) ...[
+                        Row(
+                          children: [
+                            const Icon(
+                              LucideIcons.phone,
+                              size: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              phone,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ],
                   ),
-                  const Icon(
-                    LucideIcons.chevronRight,
-                    size: 18,
-                    color: AppColors.textLight,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -518,7 +499,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
   Widget _buildShiftStatusCard() {
     final shiftState = ref.watch(shiftProvider);
     final activeUser = ref.watch(activeUserProvider);
-    final cashierName = activeUser?['name'] ?? 'Kasir';
+    final cashierName = activeUser?.name ?? 'Kasir';
 
     return shiftState.when(
       loading: () => Container(
@@ -834,13 +815,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           icon: LucideIcons.receipt,
           color: Colors.brown,
           route: '/transactions',
-        ),
-        _buildMenuItem(
-          context,
-          title: 'Metode Pembayaran',
-          icon: LucideIcons.creditCard,
-          color: Colors.green[700]!,
-          route: '/payment-options',
         ),
         _buildMenuItem(
           context,
